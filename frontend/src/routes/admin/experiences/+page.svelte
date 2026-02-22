@@ -6,63 +6,97 @@
 	const edu = $derived(experiences.edu_experiences ?? []);
 	const emp = $derived(experiences.emp_experiences ?? []);
 	let editingId = $state<number | null>(null);
+	const inputClass = 'rounded border border-ash-600 bg-ash-900 px-2 py-1.5 text-ash-100 focus:border-cyan focus:outline-none';
 </script>
 
 <svelte:head><title>Experiences</title></svelte:head>
 
-<h1 class="admin-page-title">Experiences</h1>
+<div class="mb-6 flex items-center justify-between">
+	<h1 class="text-xl font-semibold text-ash-100">Experiences</h1>
+</div>
 
 {#if data.form?.message && !data.form?.success}
-	<p class="admin-msg admin-msg-error">{data.form.message}</p>
+	<div class="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{data.form.message}</div>
 {/if}
 {#if data.form?.success}
-	<p class="admin-msg admin-msg-success">Saved.</p>
+	<div class="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">Saved.</div>
 {/if}
 
 {#if experiences !== null}
-	<div class="admin-card">
-		<h2 class="admin-card-title">Add experience</h2>
-		<form method="POST" action="?/create" use:enhance style="display: grid; gap: 1rem; max-width: 28rem;">
-			<div class="admin-form-group" style="margin-bottom: 0;">
-				<label for="new_type">Type</label>
-				<select id="new_type" name="type" style="max-width: 12rem; padding: 0.5rem 0.75rem; background: var(--color-ash-900); border: 1px solid var(--color-ash-600); color: var(--color-ash-100); border-radius: 4px;">
-					<option value="education">Education</option>
-					<option value="employment">Employment</option>
-				</select>
-			</div>
-			<div class="admin-form-group" style="margin-bottom: 0;"><label for="new_title">Title</label><input id="new_title" type="text" name="title" required maxlength="55" /></div>
-			<div class="admin-form-group" style="margin-bottom: 0;"><label for="new_period">Period</label><input id="new_period" type="text" name="period" required maxlength="55" /></div>
-			<div class="admin-form-group" style="margin-bottom: 0;"><label for="new_description">Description</label><textarea id="new_description" name="description" rows="2" required maxlength="255"></textarea></div>
-			<input type="hidden" name="order_edu" value={edu.length + 1} />
-			<input type="hidden" name="order_emp" value={emp.length + 1} />
-			<button type="submit" class="admin-btn admin-btn-accent">Add</button>
-		</form>
+	<div class="mb-6 rounded-lg border border-ash-700 bg-ash-800 shadow">
+		<div class="flex flex-wrap items-end justify-between gap-4 border-b border-ash-700 px-4 py-3">
+			<h2 class="m-0 font-semibold text-ash-200">Add experience</h2>
+			<form method="POST" action="?/create" use:enhance class="flex flex-wrap items-end gap-3">
+				<div>
+					<label for="new_type" class="mb-1 block text-xs text-ash-500">Type</label>
+					<select id="new_type" name="type" class="rounded border border-ash-600 bg-ash-900 px-3 py-2 text-ash-100 focus:border-cyan focus:outline-none">
+						<option value="education">Education</option>
+						<option value="employment">Employment</option>
+					</select>
+				</div>
+				<div>
+					<label for="new_title" class="mb-1 block text-xs text-ash-500">Title</label>
+					<input id="new_title" type="text" name="title" required maxlength="55" class={inputClass} />
+				</div>
+				<div>
+					<label for="new_period" class="mb-1 block text-xs text-ash-500">Period</label>
+					<input id="new_period" type="text" name="period" required maxlength="55" class={inputClass} />
+				</div>
+				<div>
+					<label for="new_description" class="mb-1 block text-xs text-ash-500">Description</label>
+					<textarea id="new_description" name="description" rows="1" required maxlength="255" class={inputClass}></textarea>
+				</div>
+				<input type="hidden" name="order_edu" value={edu.length + 1} />
+				<input type="hidden" name="order_emp" value={emp.length + 1} />
+				<button type="submit" class="rounded bg-cyan px-4 py-2 text-sm font-medium text-ash-900 hover:opacity-90">Add</button>
+			</form>
+		</div>
 	</div>
 
-	<div class="admin-subsection">
-		<h2 class="admin-card-title">Education</h2>
-		<div class="admin-list">
+	<div class="mb-6">
+		<h2 class="mb-2 text-sm font-semibold text-ash-400">Education</h2>
+		<div class="divide-y divide-ash-700 rounded-lg border border-ash-700 bg-ash-800 shadow">
 			{#each edu as item (item.id)}
 				{#if editingId === item.id}
-					<form method="POST" action="?/update" use:enhance class="admin-list-item" style="flex-direction: column; align-items: stretch; gap: 0.75rem;">
-						<input type="hidden" name="id" value={item.id} />
-						<input type="hidden" name="type" value="education" />
-						<div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: end;">
-							<div class="admin-form-group" style="margin-bottom: 0;"><label>Title</label><input type="text" name="title" value={item.title} required maxlength="55" style="margin: 0;" /></div>
-							<div class="admin-form-group" style="margin-bottom: 0;"><label>Period</label><input type="text" name="period" value={item.period} required maxlength="55" style="margin: 0;" /></div>
-							<div class="admin-form-group" style="margin-bottom: 0;"><label>Order</label><input type="number" name="order" value={item.order} min="1" style="width: 4rem; margin: 0;" /></div>
-						</div>
-						<div class="admin-form-group" style="margin-bottom: 0;"><label>Description</label><textarea name="description" rows="2" maxlength="255" style="margin: 0;">{item.description}</textarea></div>
-						<div class="admin-form-actions" style="margin-top: 0;"><button type="submit" class="admin-btn admin-btn-accent">Save</button><button type="button" class="admin-btn admin-btn-ghost" onclick={() => (editingId = null)}>Cancel</button></div>
-					</form>
+					<div class="p-4">
+						<form method="POST" action="?/update" use:enhance class="flex flex-col gap-3">
+							<input type="hidden" name="id" value={item.id} />
+							<input type="hidden" name="type" value="education" />
+							<div class="grid gap-3 md:grid-cols-3">
+								<div>
+									<label for="edu-title-{item.id}" class="mb-1 block text-xs text-ash-500">Title</label>
+									<input id="edu-title-{item.id}" type="text" name="title" value={item.title} required maxlength="55" class="w-full {inputClass}" />
+								</div>
+								<div>
+									<label for="edu-period-{item.id}" class="mb-1 block text-xs text-ash-500">Period</label>
+									<input id="edu-period-{item.id}" type="text" name="period" value={item.period} required maxlength="55" class="w-full {inputClass}" />
+								</div>
+								<div>
+									<label for="edu-order-{item.id}" class="mb-1 block text-xs text-ash-500">Order</label>
+									<input id="edu-order-{item.id}" type="number" name="order" value={item.order} min="1" class="w-16 {inputClass}" />
+								</div>
+							</div>
+							<div>
+								<label for="edu-desc-{item.id}" class="mb-1 block text-xs text-ash-500">Description</label>
+								<textarea id="edu-desc-{item.id}" name="description" rows="2" maxlength="255" class="w-full {inputClass}">{item.description}</textarea>
+							</div>
+							<div class="flex gap-2">
+								<button type="submit" class="rounded bg-cyan px-3 py-1.5 text-sm text-ash-900">Save</button>
+								<button type="button" class="rounded border border-ash-600 px-3 py-1.5 text-sm text-ash-300 hover:bg-ash-700" onclick={() => (editingId = null)}>Cancel</button>
+							</div>
+						</form>
+					</div>
 				{:else}
-					<div class="admin-list-item">
-						<div class="admin-list-item-content"><strong>{item.title}</strong> — {item.period}<br /><span style="color: var(--color-ash-400); font-size: 0.875rem;">{item.description}</span></div>
-						<div class="admin-list-item-actions">
-							<a href="/admin/experiences?orderUp={item.id}" class="admin-btn admin-btn-ghost">↑</a>
-							<a href="/admin/experiences?orderDown={item.id}" class="admin-btn admin-btn-ghost">↓</a>
-							<button type="button" class="admin-btn admin-btn-ghost" onclick={() => (editingId = item.id)}>Edit</button>
-							<form method="POST" action="?/delete" use:enhance style="display:inline;"><input type="hidden" name="id" value={item.id} /><button type="submit" class="admin-btn admin-btn-danger">Delete</button></form>
+					<div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 hover:bg-ash-700/50">
+						<div class="text-ash-200"><strong>{item.title}</strong> — {item.period}<br /><span class="text-sm text-ash-400">{item.description}</span></div>
+						<div class="flex items-center gap-1">
+							<a href="/admin/experiences?orderUp={item.id}" class="rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700">↑</a>
+							<a href="/admin/experiences?orderDown={item.id}" class="rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700">↓</a>
+							<button type="button" class="rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700" onclick={() => (editingId = item.id)}>Edit</button>
+							<form method="POST" action="?/delete" use:enhance class="inline">
+								<input type="hidden" name="id" value={item.id} />
+								<button type="submit" class="rounded border border-ash-600 px-2 py-1 text-xs text-red-400 hover:bg-red-500/10">Delete</button>
+							</form>
 						</div>
 					</div>
 				{/if}
@@ -70,30 +104,50 @@
 		</div>
 	</div>
 
-	<div class="admin-subsection">
-		<h2 class="admin-card-title">Employment</h2>
-		<div class="admin-list">
+	<div>
+		<h2 class="mb-2 text-sm font-semibold text-ash-400">Employment</h2>
+		<div class="divide-y divide-ash-700 rounded-lg border border-ash-700 bg-ash-800 shadow">
 			{#each emp as item (item.id)}
 				{#if editingId === item.id}
-					<form method="POST" action="?/update" use:enhance class="admin-list-item" style="flex-direction: column; align-items: stretch; gap: 0.75rem;">
-						<input type="hidden" name="id" value={item.id} />
-						<input type="hidden" name="type" value="employment" />
-						<div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem; align-items: end;">
-							<div class="admin-form-group" style="margin-bottom: 0;"><label>Title</label><input type="text" name="title" value={item.title} required maxlength="55" style="margin: 0;" /></div>
-							<div class="admin-form-group" style="margin-bottom: 0;"><label>Period</label><input type="text" name="period" value={item.period} required maxlength="55" style="margin: 0;" /></div>
-							<div class="admin-form-group" style="margin-bottom: 0;"><label>Order</label><input type="number" name="order" value={item.order} min="1" style="width: 4rem; margin: 0;" /></div>
-						</div>
-						<div class="admin-form-group" style="margin-bottom: 0;"><label>Description</label><textarea name="description" rows="2" maxlength="255" style="margin: 0;">{item.description}</textarea></div>
-						<div class="admin-form-actions" style="margin-top: 0;"><button type="submit" class="admin-btn admin-btn-accent">Save</button><button type="button" class="admin-btn admin-btn-ghost" onclick={() => (editingId = null)}>Cancel</button></div>
-					</form>
+					<div class="p-4">
+						<form method="POST" action="?/update" use:enhance class="flex flex-col gap-3">
+							<input type="hidden" name="id" value={item.id} />
+							<input type="hidden" name="type" value="employment" />
+							<div class="grid gap-3 md:grid-cols-3">
+								<div>
+									<label for="emp-title-{item.id}" class="mb-1 block text-xs text-ash-500">Title</label>
+									<input id="emp-title-{item.id}" type="text" name="title" value={item.title} required maxlength="55" class="w-full {inputClass}" />
+								</div>
+								<div>
+									<label for="emp-period-{item.id}" class="mb-1 block text-xs text-ash-500">Period</label>
+									<input id="emp-period-{item.id}" type="text" name="period" value={item.period} required maxlength="55" class="w-full {inputClass}" />
+								</div>
+								<div>
+									<label for="emp-order-{item.id}" class="mb-1 block text-xs text-ash-500">Order</label>
+									<input id="emp-order-{item.id}" type="number" name="order" value={item.order} min="1" class="w-16 {inputClass}" />
+								</div>
+							</div>
+							<div>
+								<label for="emp-desc-{item.id}" class="mb-1 block text-xs text-ash-500">Description</label>
+								<textarea id="emp-desc-{item.id}" name="description" rows="2" maxlength="255" class="w-full {inputClass}">{item.description}</textarea>
+							</div>
+							<div class="flex gap-2">
+								<button type="submit" class="rounded bg-cyan px-3 py-1.5 text-sm text-ash-900">Save</button>
+								<button type="button" class="rounded border border-ash-600 px-3 py-1.5 text-sm text-ash-300 hover:bg-ash-700" onclick={() => (editingId = null)}>Cancel</button>
+							</div>
+						</form>
+					</div>
 				{:else}
-					<div class="admin-list-item">
-						<div class="admin-list-item-content"><strong>{item.title}</strong> — {item.period}<br /><span style="color: var(--color-ash-400); font-size: 0.875rem;">{item.description}</span></div>
-						<div class="admin-list-item-actions">
-							<a href="/admin/experiences?orderUp={item.id}" class="admin-btn admin-btn-ghost">↑</a>
-							<a href="/admin/experiences?orderDown={item.id}" class="admin-btn admin-btn-ghost">↓</a>
-							<button type="button" class="admin-btn admin-btn-ghost" onclick={() => (editingId = item.id)}>Edit</button>
-							<form method="POST" action="?/delete" use:enhance style="display:inline;"><input type="hidden" name="id" value={item.id} /><button type="submit" class="admin-btn admin-btn-danger">Delete</button></form>
+					<div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 hover:bg-ash-700/50">
+						<div class="text-ash-200"><strong>{item.title}</strong> — {item.period}<br /><span class="text-sm text-ash-400">{item.description}</span></div>
+						<div class="flex items-center gap-1">
+							<a href="/admin/experiences?orderUp={item.id}" class="rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700">↑</a>
+							<a href="/admin/experiences?orderDown={item.id}" class="rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700">↓</a>
+							<button type="button" class="rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700" onclick={() => (editingId = item.id)}>Edit</button>
+							<form method="POST" action="?/delete" use:enhance class="inline">
+								<input type="hidden" name="id" value={item.id} />
+								<button type="submit" class="rounded border border-ash-600 px-2 py-1 text-xs text-red-400 hover:bg-red-500/10">Delete</button>
+							</form>
 						</div>
 					</div>
 				{/if}
@@ -101,5 +155,5 @@
 		</div>
 	</div>
 {:else}
-	<p class="admin-msg admin-msg-error">Failed to load experiences.</p>
+	<div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">Failed to load experiences.</div>
 {/if}

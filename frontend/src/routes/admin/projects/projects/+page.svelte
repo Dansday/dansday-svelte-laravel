@@ -9,39 +9,45 @@
 
 <svelte:head><title>Projects</title></svelte:head>
 
-<h1 class="admin-page-title">Projects</h1>
+<div class="mb-6 flex items-center justify-between">
+	<h1 class="text-xl font-semibold text-ash-100">Projects</h1>
+	<a href="/admin/projects/projects/new" class="rounded bg-cyan px-4 py-2 text-sm font-medium text-ash-900 hover:opacity-90">New project</a>
+</div>
 
 {#if data.form?.message && !data.form?.success}
-	<p class="admin-msg admin-msg-error">{data.form.message}</p>
+	<div class="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{data.form.message}</div>
 {/if}
 {#if data.form?.success}
-	<p class="admin-msg admin-msg-success">Deleted.</p>
+	<div class="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">Deleted.</div>
 {/if}
 
 {#if projects !== null}
-	<div class="admin-form-actions" style="margin-bottom: 1rem;">
-		<a href="/admin/projects/projects/new" class="admin-btn admin-btn-accent">New project</a>
-	</div>
-
-	<div class="admin-list">
-		{#each projects as item (item.id)}
-			<div class="admin-list-item">
-				<div class="admin-list-item-content">
-					<strong>{item.title || '(No title)'}</strong>
-					<span style="color: var(--color-ash-500); font-size: 0.8125rem;"> — {catMap.get(item.category_id) ?? item.category_id} {item.enable ? '' : '· Hidden'}</span>
-				</div>
-				<div class="admin-list-item-actions">
-					<a href="/admin/projects/projects?orderUp={item.id}" class="admin-btn admin-btn-ghost">↑</a>
-					<a href="/admin/projects/projects?orderDown={item.id}" class="admin-btn admin-btn-ghost">↓</a>
-					<a href="/admin/projects/projects/{item.id}" class="admin-btn admin-btn-ghost">Edit</a>
-					<form method="POST" action="?/delete" use:enhance style="display:inline;">
-						<input type="hidden" name="id" value={item.id} />
-						<button type="submit" class="admin-btn admin-btn-danger">Delete</button>
-					</form>
-				</div>
-			</div>
-		{/each}
+	<div class="overflow-hidden rounded-lg border border-ash-700 bg-ash-800 shadow">
+		<table class="w-full text-sm">
+			<thead class="border-b border-ash-700 bg-ash-800">
+				<tr>
+					<th class="px-4 py-2 text-left font-medium text-ash-400">Title</th>
+					<th class="w-48 px-4 py-2 text-right font-medium text-ash-400">Actions</th>
+				</tr>
+			</thead>
+			<tbody class="divide-y divide-ash-700">
+				{#each projects as item (item.id)}
+					<tr class="bg-ash-800 hover:bg-ash-700/50">
+						<td class="px-4 py-2 text-ash-200"><strong>{item.title || '(No title)'}</strong><span class="ml-1 text-ash-500">— {catMap.get(item.category_id) ?? item.category_id}{item.enable ? '' : ' · Hidden'}</span></td>
+						<td class="px-4 py-2 text-right">
+							<a href="/admin/projects/projects?orderUp={item.id}" class="mr-1 rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700">↑</a>
+							<a href="/admin/projects/projects?orderDown={item.id}" class="mr-1 rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700">↓</a>
+							<a href="/admin/projects/projects/{item.id}" class="mr-1 rounded border border-ash-600 px-2 py-1 text-xs text-ash-300 hover:bg-ash-700">Edit</a>
+							<form method="POST" action="?/delete" use:enhance class="inline">
+								<input type="hidden" name="id" value={item.id} />
+								<button type="submit" class="rounded border border-ash-600 px-2 py-1 text-xs text-red-400 hover:bg-red-500/10">Delete</button>
+							</form>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
 	</div>
 {:else}
-	<p class="admin-msg admin-msg-error">Failed to load projects.</p>
+	<div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">Failed to load projects.</div>
 {/if}

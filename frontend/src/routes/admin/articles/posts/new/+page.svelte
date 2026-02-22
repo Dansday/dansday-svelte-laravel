@@ -1,65 +1,82 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import SummernoteEditor from '$lib/components/admin/SummernoteEditor.svelte';
 
 	let { data } = $props();
 	const categories = $derived(data.categories ?? []);
+	const inputClass = 'w-full rounded border border-ash-600 bg-ash-900 px-3 py-2 text-ash-100 focus:border-cyan focus:outline-none';
+	const selectClass = 'rounded border border-ash-600 bg-ash-900 px-3 py-2 text-ash-100 focus:border-cyan focus:outline-none';
 </script>
 
 <svelte:head><title>New article</title></svelte:head>
 
-<h1 class="admin-page-title">New article</h1>
+<div class="mb-6 flex items-center justify-between">
+	<h1 class="text-xl font-semibold text-ash-100">New article</h1>
+</div>
 
 {#if data.form?.message && !data.form?.success}
-	<p class="admin-msg admin-msg-error">{data.form.message}</p>
+	<div class="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">{data.form.message}</div>
 {/if}
 {#if data.form?.success}
-	<p class="admin-msg admin-msg-success">Created. <a href="/admin/articles/posts">Back to list</a></p>
+	<div class="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-2 text-sm text-green-400">
+		Created. <a href="/admin/articles/posts" class="text-cyan hover:underline">Back to list</a>
+	</div>
 {/if}
 
 {#if categories !== null && !data.form?.success}
-	<form method="POST" action="?/create" use:enhance class="admin-card" enctype="multipart/form-data">
-		<div class="admin-form-group">
-			<label for="title">Title</label>
-			<input id="title" type="text" name="title" maxlength="55" required />
+	<div class="rounded-lg border border-ash-700 bg-ash-800 shadow">
+		<div class="border-b border-ash-700 px-4 py-3">
+			<h2 class="m-0 font-semibold text-ash-200">New post</h2>
 		</div>
-		<div class="admin-form-group">
-			<label for="short_desc">Short description</label>
-			<textarea id="short_desc" name="short_desc" rows="2" maxlength="255"></textarea>
-		</div>
-		<div class="admin-form-group">
-			<label for="author">Author</label>
-			<input id="author" type="text" name="author" maxlength="55" />
-		</div>
-		<div class="admin-form-group">
-			<label for="category">Category</label>
-			<select id="category" name="category" required style="max-width: 14rem; padding: 0.5rem 0.75rem; background: var(--color-ash-900); border: 1px solid var(--color-ash-600); color: var(--color-ash-100); border-radius: 4px;">
-				<option value="">Select…</option>
-				{#each categories as cat}
-					<option value={cat.id}>{cat.name}</option>
-				{/each}
-			</select>
-		</div>
-		<div class="admin-form-group">
-			<label for="status">Status</label>
-			<select id="status" name="status" style="max-width: 10rem; padding: 0.5rem 0.75rem; background: var(--color-ash-900); border: 1px solid var(--color-ash-600); color: var(--color-ash-100); border-radius: 4px;">
-				<option value="draft">Draft</option>
-				<option value="published">Published</option>
-			</select>
-		</div>
-		<div class="admin-form-group">
-			<label for="text">Content (HTML)</label>
-			<textarea id="text" name="text" rows="12" required></textarea>
-		</div>
-		<div class="admin-form-group">
-			<label for="image">Poster image (required)</label>
-			<input id="image" type="file" name="image" accept=".jpg,.jpeg,.png" required />
-		</div>
-		<div class="admin-form-actions">
-			<button type="submit" class="admin-btn admin-btn-accent">Create</button>
-			<a href="/admin/articles/posts" class="admin-btn admin-btn-ghost">Cancel</a>
-		</div>
-	</form>
+		<form method="POST" action="?/create" use:enhance class="p-4" enctype="multipart/form-data">
+			<div class="mb-4 grid gap-4 md:grid-cols-2">
+				<div>
+					<label for="title" class="mb-1 block text-sm text-ash-400">Title</label>
+					<input id="title" type="text" name="title" maxlength="55" required class={inputClass} />
+				</div>
+				<div>
+					<label for="author" class="mb-1 block text-sm text-ash-400">Author</label>
+					<input id="author" type="text" name="author" maxlength="55" class={inputClass} />
+				</div>
+			</div>
+			<div class="mb-4">
+				<label for="short_desc" class="mb-1 block text-sm text-ash-400">Short description</label>
+				<textarea id="short_desc" name="short_desc" rows="2" maxlength="255" class={inputClass}></textarea>
+			</div>
+			<div class="mb-4 grid gap-4 md:grid-cols-2">
+				<div>
+					<label for="category" class="mb-1 block text-sm text-ash-400">Category</label>
+					<select id="category" name="category" required class={selectClass}>
+						<option value="">Select…</option>
+						{#each categories as cat}
+							<option value={cat.id}>{cat.name}</option>
+						{/each}
+					</select>
+				</div>
+				<div>
+					<label for="status" class="mb-1 block text-sm text-ash-400">Status</label>
+					<select id="status" name="status" class={selectClass}>
+						<option value="draft">Draft</option>
+						<option value="published">Published</option>
+					</select>
+				</div>
+			</div>
+			<div class="mb-4">
+				<label for="article-new-text" class="mb-1 block text-sm text-ash-400">Content</label>
+				<textarea id="article-new-text" name="text" rows="12" required></textarea>
+				<SummernoteEditor selector="#article-new-text" />
+			</div>
+			<div class="mb-4">
+				<label for="image" class="mb-1 block text-sm text-ash-400">Poster image (required)</label>
+				<input id="image" type="file" name="image" accept=".jpg,.jpeg,.png" required class="text-ash-300" />
+			</div>
+			<div class="flex gap-2">
+				<button type="submit" class="rounded bg-cyan px-4 py-2 font-medium text-ash-900 hover:opacity-90">Create</button>
+				<a href="/admin/articles/posts" class="rounded border border-ash-600 bg-ash-700 px-4 py-2 text-ash-200 hover:bg-ash-600">Cancel</a>
+			</div>
+		</form>
+	</div>
 {:else if !data.form?.success}
-	<p class="admin-msg admin-msg-error">Failed to load categories.</p>
-	<a href="/admin/articles/posts" class="admin-btn admin-btn-ghost">Back to list</a>
+	<div class="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-400">Failed to load categories.</div>
+	<a href="/admin/articles/posts" class="rounded border border-ash-600 bg-ash-700 px-4 py-2 text-ash-200 hover:bg-ash-600">Back to list</a>
 {/if}
