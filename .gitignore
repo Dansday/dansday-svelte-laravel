@@ -1,40 +1,39 @@
 # Dependencies
-main/node_modules/
-admin/node_modules/
-admin/vendor/
+frontend/node_modules/
+backend/vendor/
 
 # Build / output
-main/.svelte-kit/
-main/.pnpm-store/
-pnpm-lock.yaml
-package-lock.json
-composer.lock
+frontend/.svelte-kit/
+frontend/.pnpm-store/
+frontend/pnpm-lock.yaml
+frontend/package-lock.json
+backend/composer.lock
 
 # Env
 .env
 
 # Logs & cache
 *.log
-admin/storage/logs/*
-admin/storage/framework/cache/*
-admin/storage/framework/sessions/*
-admin/storage/framework/views/*
-admin/bootstrap/cache/*
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
 
 # Laravel / PHP
-admin/.phpunit.result.cache
-admin/.phpunit.cache
+.phpunit.result.cache
+.phpunit.cache
 
 # Vite
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+frontend/vite.config.js.timestamp-*
+frontend/vite.config.ts.timestamp-*
 
 # OS
 .DS_Store
 
 # Uploads
-admin/public/uploads/**/*
-!admin/public/uploads/img/image_default.png
+backend/public/uploads/**/*
+!backend/public/uploads/img/image_default.png
 
 # References
 references/

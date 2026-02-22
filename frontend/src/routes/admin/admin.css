@@ -1,0 +1,98 @@
+/* Admin: auth cards + Summernote overrides (palette: ash/cyan from app.css) */
+
+/* Login / Register cards */
+.admin-login,
+.admin-register {
+	width: 100%;
+	max-width: 24rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--color-ash-700);
+	background-color: var(--color-ash-800);
+	padding: 1.5rem;
+}
+
+.admin-login h1,
+.admin-register h1 {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: var(--color-ash-100);
+}
+
+.admin-login label,
+.admin-register label {
+	margin-bottom: 0.25rem;
+	display: block;
+	font-size: 0.875rem;
+	color: var(--color-ash-400);
+}
+
+.admin-login input,
+.admin-register input {
+	margin-top: 0.25rem;
+	display: block;
+	width: 100%;
+	border-radius: 0.25rem;
+	border: 1px solid var(--color-ash-600);
+	background-color: var(--color-ash-900);
+	padding: 0.5rem 0.75rem;
+	color: var(--color-ash-100);
+}
+.admin-login input:focus,
+.admin-register input:focus {
+	outline: none;
+	border-color: var(--color-cyan);
+}
+
+.admin-login button,
+.admin-register button {
+	margin-top: 0.5rem;
+	border-radius: 0.25rem;
+	border: 1px solid var(--color-ash-500);
+	background-color: var(--color-ash-600);
+	padding: 0.5rem 1rem;
+	color: var(--color-ash-100);
+}
+.admin-login button:hover,
+.admin-register button:hover {
+	background-color: var(--color-ash-500);
+}
+
+.admin-login .error,
+.admin-register .error {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+	color: var(--color-red-400, #f87171);
+}
+
+.admin-login a,
+.admin-register a {
+	color: var(--color-cyan);
+	text-decoration: none;
+}
+.admin-login a:hover,
+.admin-register a:hover {
+	text-decoration: underline;
+}
+
+/* Summernote: use ash palette */
+.note-editor.note-frame {
+	border-color: var(--color-ash-600);
+}
+.note-editor .note-toolbar {
+	background: var(--color-ash-800);
+	border-color: var(--color-ash-700);
+}
+.note-editor .note-editing-area {
+	background: var(--color-ash-900);
+	color: var(--color-ash-100);
+}
+.note-editor .note-btn {
+	background: var(--color-ash-700);
+	border-color: var(--color-ash-600);
+	color: var(--color-ash-200);
+}
+.note-editor .note-btn:hover {
+	background: var(--color-ash-600);
+	color: var(--color-ash-100);
+}

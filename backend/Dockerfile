@@ -1,0 +1,16 @@
+FROM php:8.5-cli-alpine
+RUN apk add --no-cache git unzip libzip-dev libpng-dev libxml2-dev oniguruma-dev
+RUN docker-php-ext-install pdo_mysql zip gd xml mbstring
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+WORKDIR /app
+COPY composer.json ./
+RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
+COPY . .
+RUN composer dump-autoload --optimize
+RUN chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+EXPOSE 8080
+CMD ["sh", "-c", "if [ ! -f .env ]; then cp .env.example .env && php artisan key:generate --no-interaction --force; fi && sed -i \"s|^DB_HOST=.*|DB_HOST=${DB_HOST:-127.0.0.1}|\" .env 2>/dev/null || true && sed -i \"s|^DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME:-dansday_main}|\" .env 2>/dev/null || true && sed -i \"s|^DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD:-password}|\" .env 2>/dev/null || true && sed -i \"s|^APP_URL=.*|APP_URL=${APP_URL:-http://localhost:8080}|\" .env 2>/dev/null || true && sed -i \"s|^REDIS_HOST=.*|REDIS_HOST=${REDIS_HOST:-redis}|\" .env 2>/dev/null || true && if [ ! -f vendor/autoload.php ]; then composer install --no-interaction; fi && for i in 1 2 3 4 5 6 7 8 9 10; do php artisan migrate --force --no-interaction && break; sleep 3; done && php artisan config:clear && exec php artisan serve --host=0.0.0.0 --port=8080"]
