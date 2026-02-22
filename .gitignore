@@ -34,3 +34,6 @@ frontend/vite.config.ts.timestamp-*
 # Uploads
 backend/public/uploads/**/*
 !backend/public/uploads/img/image_default.png
+
+# References
+references/
