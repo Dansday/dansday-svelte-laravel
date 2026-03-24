@@ -103,8 +103,8 @@
 
 		moveSidePoints(topPoints, relX, relY, -mouseSpeedY);
 		moveSidePoints(rightPoints, relY, w - relX, mouseSpeedX);
-		moveSidePoints(bottomPoints, relX, h - relY, mouseSpeedY);
-		moveSidePoints(leftPoints, relY, relX, -mouseSpeedX);
+		moveSidePoints(bottomPoints, w - relX, h - relY, mouseSpeedY);
+		moveSidePoints(leftPoints, h - relY, relX, -mouseSpeedX);
 
 		const ctx = canvasEl.getContext('2d');
 		if (!ctx) return;
