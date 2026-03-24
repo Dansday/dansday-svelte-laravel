@@ -80,7 +80,7 @@
 		if (!container || !canvasEl) return;
 
 		const rect = container.getBoundingClientRect();
-		const pad = 50;
+		const pad = 100;
 
 		canvasEl.width = rect.width + pad * 2;
 		canvasEl.height = rect.height + pad * 2;
