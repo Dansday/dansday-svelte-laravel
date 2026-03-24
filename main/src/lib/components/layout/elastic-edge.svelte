@@ -5,7 +5,7 @@
 	const VISCOSITY = 20;
 	const MOUSE_DIST = 100;
 	const DAMPING = 0.15;
-	const EDGE_WIDTH = 15;
+	const R = 12;
 
 	type EdgePoint = {
 		pos: number;
@@ -29,9 +29,10 @@
 
 	function createSidePoints(length: number): EdgePoint[] {
 		const pts: EdgePoint[] = [];
+		const usable = length - 2 * R;
 		for (let i = 0; i <= POINTS_PER_SIDE + 1; i++) {
 			const t = i / (POINTS_PER_SIDE + 1);
-			pts.push({ pos: t * length, offset: 0, vOffset: 0 });
+			pts.push({ pos: R + t * usable, offset: 0, vOffset: 0 });
 		}
 		return pts;
 	}
@@ -57,7 +58,7 @@
 		if (!container || !canvasEl) return;
 
 		const rect = container.getBoundingClientRect();
-		const pad = EDGE_WIDTH + MOUSE_DIST;
+		const pad = 50;
 
 		canvasEl.width = rect.width + pad * 2;
 		canvasEl.height = rect.height + pad * 2;
@@ -67,7 +68,7 @@
 		const w = rect.width;
 		const h = rect.height;
 
-		if (!topPoints.length || Math.abs(topPoints[topPoints.length - 1].pos - w) > 10) {
+		if (!topPoints.length || Math.abs(topPoints[topPoints.length - 1].pos - (w - R)) > 10) {
 			topPoints = createSidePoints(w);
 			rightPoints = createSidePoints(h);
 			bottomPoints = createSidePoints(w);
@@ -78,9 +79,9 @@
 		const relY = mouseY - rect.top;
 
 		moveSidePoints(topPoints, relX, relY, mouseSpeedY);
+		moveSidePoints(rightPoints, relY, w - relX, mouseSpeedX);
 		moveSidePoints(bottomPoints, relX, h - relY, -mouseSpeedY);
-		moveSidePoints(rightPoints, relY, w - relX, -mouseSpeedX);
-		moveSidePoints(leftPoints, relY, relX, mouseSpeedX);
+		moveSidePoints(leftPoints, relY, relX, -mouseSpeedX);
 
 		const ctx = canvasEl.getContext('2d');
 		if (!ctx) return;
@@ -89,74 +90,74 @@
 
 		const ox = pad;
 		const oy = pad;
-		const r = 12;
 
 		ctx.beginPath();
-		ctx.moveTo(ox + r, oy);
+
+		ctx.moveTo(ox + R, oy);
 
 		for (let i = 0; i < topPoints.length; i++) {
 			const p = topPoints[i];
 			const px = ox + p.pos;
-			const py = oy + p.offset;
+			const py = oy - p.offset;
 			if (i < topPoints.length - 1) {
 				const n = topPoints[i + 1];
-				const cx = (px + ox + n.pos) / 2;
-				const cy = (py + oy + n.offset) / 2;
-				ctx.quadraticCurveTo(px, py, cx, cy);
+				const mx = ox + (p.pos + n.pos) / 2;
+				const my = oy - (p.offset + n.offset) / 2;
+				ctx.quadraticCurveTo(px, py, mx, my);
 			} else {
-				ctx.lineTo(ox + w - r, oy);
+				ctx.lineTo(ox + w - R, oy);
 			}
 		}
 
-		ctx.quadraticCurveTo(ox + w, oy, ox + w, oy + r);
+		ctx.quadraticCurveTo(ox + w, oy, ox + w, oy + R);
 
 		for (let i = 0; i < rightPoints.length; i++) {
 			const p = rightPoints[i];
-			const px = ox + w - p.offset;
+			const px = ox + w + p.offset;
 			const py = oy + p.pos;
 			if (i < rightPoints.length - 1) {
 				const n = rightPoints[i + 1];
-				const cx = (px + ox + w - n.offset) / 2;
-				const cy = (py + oy + n.pos) / 2;
-				ctx.quadraticCurveTo(px, py, cx, cy);
+				const mx = ox + w + (p.offset + n.offset) / 2;
+				const my = oy + (p.pos + n.pos) / 2;
+				ctx.quadraticCurveTo(px, py, mx, my);
 			} else {
-				ctx.lineTo(ox + w, oy + h - r);
+				ctx.lineTo(ox + w, oy + h - R);
 			}
 		}
 
-		ctx.quadraticCurveTo(ox + w, oy + h, ox + w - r, oy + h);
+		ctx.quadraticCurveTo(ox + w, oy + h, ox + w - R, oy + h);
 
 		for (let i = 0; i < bottomPoints.length; i++) {
 			const p = bottomPoints[i];
 			const px = ox + w - p.pos;
-			const py = oy + h - p.offset;
+			const py = oy + h + p.offset;
 			if (i < bottomPoints.length - 1) {
 				const n = bottomPoints[i + 1];
-				const cx = (px + ox + w - n.pos) / 2;
-				const cy = (py + oy + h - n.offset) / 2;
-				ctx.quadraticCurveTo(px, py, cx, cy);
+				const mx = ox + w - (p.pos + n.pos) / 2;
+				const my = oy + h + (p.offset + n.offset) / 2;
+				ctx.quadraticCurveTo(px, py, mx, my);
 			} else {
-				ctx.lineTo(ox + r, oy + h);
+				ctx.lineTo(ox + R, oy + h);
 			}
 		}
 
-		ctx.quadraticCurveTo(ox, oy + h, ox, oy + h - r);
+		ctx.quadraticCurveTo(ox, oy + h, ox, oy + h - R);
 
 		for (let i = 0; i < leftPoints.length; i++) {
 			const p = leftPoints[i];
-			const px = ox + p.offset;
+			const px = ox - p.offset;
 			const py = oy + h - p.pos;
 			if (i < leftPoints.length - 1) {
 				const n = leftPoints[i + 1];
-				const cx = (px + ox + n.offset) / 2;
-				const cy = (py + oy + h - n.pos) / 2;
-				ctx.quadraticCurveTo(px, py, cx, cy);
+				const mx = ox - (p.offset + n.offset) / 2;
+				const my = oy + h - (p.pos + n.pos) / 2;
+				ctx.quadraticCurveTo(px, py, mx, my);
 			} else {
-				ctx.lineTo(ox, oy + r);
+				ctx.lineTo(ox, oy + R);
 			}
 		}
 
-		ctx.quadraticCurveTo(ox, oy, ox + r, oy);
+		ctx.quadraticCurveTo(ox, oy, ox + R, oy);
 		ctx.closePath();
 
 		const gradient = ctx.createLinearGradient(ox, oy, ox + w, oy + h);
