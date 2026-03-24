@@ -80,7 +80,7 @@
 		if (!container || !canvasEl) return;
 
 		const rect = container.getBoundingClientRect();
-		const pad = 100;
+		const pad = 150;
 
 		canvasEl.width = rect.width + pad * 2;
 		canvasEl.height = rect.height + pad * 2;
@@ -156,14 +156,10 @@
 		ctx.closePath();
 
 		const gradient = ctx.createLinearGradient(ox, oy, ox + w, oy + h);
-		gradient.addColorStop(0, 'rgba(168, 208, 230, 0.08)');
-		gradient.addColorStop(1, 'rgba(168, 208, 230, 0.03)');
+		gradient.addColorStop(0, '#1c1c1c');
+		gradient.addColorStop(1, '#232323');
 		ctx.fillStyle = gradient;
 		ctx.fill();
-
-		ctx.strokeStyle = 'rgba(168, 208, 230, 0.15)';
-		ctx.lineWidth = 1.5;
-		ctx.stroke();
 	}
 
 	$effect(() => {
@@ -197,4 +193,4 @@
 	});
 </script>
 
-<canvas bind:this={canvasEl} class="pointer-events-none fixed z-20" aria-hidden="true"></canvas>
+<canvas bind:this={canvasEl} class="pointer-events-none fixed z-5" aria-hidden="true"></canvas>
