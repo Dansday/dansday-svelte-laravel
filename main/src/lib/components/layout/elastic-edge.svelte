@@ -1,23 +1,23 @@
 <script lang="ts">
 	let { container }: { container: HTMLElement | null } = $props();
 
-	const POINTS_PER_SIDE = 6;
+	const POINTS_PER_SIDE = 8;
 	const VISCOSITY = 20;
-	const MOUSE_DIST = 80;
+	const MOUSE_DIST = 100;
 	const DAMPING = 0.15;
-	const BORDER_RADIUS_PX = 12;
+	const EDGE_WIDTH = 15;
 
 	type EdgePoint = {
 		pos: number;
-		iPos: number;
 		offset: number;
 		vOffset: number;
 	};
 
-	let topPoints = $state<EdgePoint[]>([]);
-	let rightPoints = $state<EdgePoint[]>([]);
-	let bottomPoints = $state<EdgePoint[]>([]);
-	let leftPoints = $state<EdgePoint[]>([]);
+	let canvasEl = $state<HTMLCanvasElement | null>(null);
+	let topPoints: EdgePoint[] = [];
+	let rightPoints: EdgePoint[] = [];
+	let bottomPoints: EdgePoint[] = [];
+	let leftPoints: EdgePoint[] = [];
 
 	let mouseX = 0;
 	let mouseY = 0;
@@ -26,46 +26,25 @@
 	let lastMouseX = 0;
 	let lastMouseY = 0;
 	let rafId: number | null = null;
-	let cWidth = 0;
-	let cHeight = 0;
 
 	function createSidePoints(length: number): EdgePoint[] {
 		const pts: EdgePoint[] = [];
-		const r = BORDER_RADIUS_PX;
 		for (let i = 0; i <= POINTS_PER_SIDE + 1; i++) {
 			const t = i / (POINTS_PER_SIDE + 1);
-			const p = r + t * (length - 2 * r);
-			pts.push({ pos: p, iPos: p, offset: 0, vOffset: 0 });
+			pts.push({ pos: t * length, offset: 0, vOffset: 0 });
 		}
 		return pts;
 	}
 
-	function initPoints() {
-		if (!container) return;
-		const rect = container.getBoundingClientRect();
-		cWidth = rect.width;
-		cHeight = rect.height;
-		topPoints = createSidePoints(rect.width);
-		rightPoints = createSidePoints(rect.height);
-		bottomPoints = createSidePoints(rect.width);
-		leftPoints = createSidePoints(rect.height);
-	}
-
-	$effect(() => {
-		if (container) {
-			requestAnimationFrame(() => initPoints());
-		}
-	});
-
-	function moveSidePoints(pts: EdgePoint[], mouseAlongAxis: number, mouseCrossAxis: number, speed: number) {
+	function moveSidePoints(pts: EdgePoint[], mouseAlong: number, mouseCross: number, speed: number) {
 		for (const p of pts) {
 			p.vOffset += (0 - p.offset) / VISCOSITY;
 
-			const dAlong = p.pos - mouseAlongAxis;
+			const dAlong = p.pos - mouseAlong;
 
-			if (Math.abs(dAlong) < MOUSE_DIST && Math.abs(mouseCrossAxis) < MOUSE_DIST) {
-				const influence = 1 - Math.abs(dAlong) / MOUSE_DIST;
-				p.vOffset += (speed / 6) * influence;
+			if (Math.abs(dAlong) < MOUSE_DIST && Math.abs(mouseCross) < MOUSE_DIST) {
+				const influence = (1 - Math.abs(dAlong) / MOUSE_DIST) * (1 - Math.abs(mouseCross) / MOUSE_DIST);
+				p.vOffset += (speed / 4) * influence;
 			}
 
 			p.vOffset *= 1 - DAMPING;
@@ -75,24 +54,120 @@
 
 	function animate() {
 		rafId = requestAnimationFrame(animate);
-		if (!container) return;
+		if (!container || !canvasEl) return;
 
 		const rect = container.getBoundingClientRect();
-		cWidth = rect.width;
-		cHeight = rect.height;
+		const pad = EDGE_WIDTH + MOUSE_DIST;
 
-		const relX = mouseX - rect.x;
-		const relY = mouseY - rect.y;
+		canvasEl.width = rect.width + pad * 2;
+		canvasEl.height = rect.height + pad * 2;
+		canvasEl.style.left = `${rect.left - pad}px`;
+		canvasEl.style.top = `${rect.top - pad}px`;
+
+		const w = rect.width;
+		const h = rect.height;
+
+		if (!topPoints.length || Math.abs(topPoints[topPoints.length - 1].pos - w) > 10) {
+			topPoints = createSidePoints(w);
+			rightPoints = createSidePoints(h);
+			bottomPoints = createSidePoints(w);
+			leftPoints = createSidePoints(h);
+		}
+
+		const relX = mouseX - rect.left;
+		const relY = mouseY - rect.top;
 
 		moveSidePoints(topPoints, relX, relY, mouseSpeedY);
-		moveSidePoints(bottomPoints, cWidth - relX, cHeight - relY, -mouseSpeedY);
-		moveSidePoints(rightPoints, relY, cWidth - relX, -mouseSpeedX);
-		moveSidePoints(leftPoints, cHeight - relY, relX, mouseSpeedX);
+		moveSidePoints(bottomPoints, relX, h - relY, -mouseSpeedY);
+		moveSidePoints(rightPoints, relY, w - relX, -mouseSpeedX);
+		moveSidePoints(leftPoints, relY, relX, mouseSpeedX);
 
-		topPoints = [...topPoints];
-		rightPoints = [...rightPoints];
-		bottomPoints = [...bottomPoints];
-		leftPoints = [...leftPoints];
+		const ctx = canvasEl.getContext('2d');
+		if (!ctx) return;
+
+		ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+		const ox = pad;
+		const oy = pad;
+		const r = 12;
+
+		ctx.beginPath();
+		ctx.moveTo(ox + r, oy);
+
+		for (let i = 0; i < topPoints.length; i++) {
+			const p = topPoints[i];
+			const px = ox + p.pos;
+			const py = oy + p.offset;
+			if (i < topPoints.length - 1) {
+				const n = topPoints[i + 1];
+				const cx = (px + ox + n.pos) / 2;
+				const cy = (py + oy + n.offset) / 2;
+				ctx.quadraticCurveTo(px, py, cx, cy);
+			} else {
+				ctx.lineTo(ox + w - r, oy);
+			}
+		}
+
+		ctx.quadraticCurveTo(ox + w, oy, ox + w, oy + r);
+
+		for (let i = 0; i < rightPoints.length; i++) {
+			const p = rightPoints[i];
+			const px = ox + w - p.offset;
+			const py = oy + p.pos;
+			if (i < rightPoints.length - 1) {
+				const n = rightPoints[i + 1];
+				const cx = (px + ox + w - n.offset) / 2;
+				const cy = (py + oy + n.pos) / 2;
+				ctx.quadraticCurveTo(px, py, cx, cy);
+			} else {
+				ctx.lineTo(ox + w, oy + h - r);
+			}
+		}
+
+		ctx.quadraticCurveTo(ox + w, oy + h, ox + w - r, oy + h);
+
+		for (let i = 0; i < bottomPoints.length; i++) {
+			const p = bottomPoints[i];
+			const px = ox + w - p.pos;
+			const py = oy + h - p.offset;
+			if (i < bottomPoints.length - 1) {
+				const n = bottomPoints[i + 1];
+				const cx = (px + ox + w - n.pos) / 2;
+				const cy = (py + oy + h - n.offset) / 2;
+				ctx.quadraticCurveTo(px, py, cx, cy);
+			} else {
+				ctx.lineTo(ox + r, oy + h);
+			}
+		}
+
+		ctx.quadraticCurveTo(ox, oy + h, ox, oy + h - r);
+
+		for (let i = 0; i < leftPoints.length; i++) {
+			const p = leftPoints[i];
+			const px = ox + p.offset;
+			const py = oy + h - p.pos;
+			if (i < leftPoints.length - 1) {
+				const n = leftPoints[i + 1];
+				const cx = (px + ox + n.offset) / 2;
+				const cy = (py + oy + h - n.pos) / 2;
+				ctx.quadraticCurveTo(px, py, cx, cy);
+			} else {
+				ctx.lineTo(ox, oy + r);
+			}
+		}
+
+		ctx.quadraticCurveTo(ox, oy, ox + r, oy);
+		ctx.closePath();
+
+		const gradient = ctx.createLinearGradient(ox, oy, ox + w, oy + h);
+		gradient.addColorStop(0, 'rgba(168, 208, 230, 0.08)');
+		gradient.addColorStop(1, 'rgba(168, 208, 230, 0.03)');
+		ctx.fillStyle = gradient;
+		ctx.fill();
+
+		ctx.strokeStyle = 'rgba(168, 208, 230, 0.15)';
+		ctx.lineWidth = 1.5;
+		ctx.stroke();
 	}
 
 	$effect(() => {
@@ -100,10 +175,14 @@
 
 		const controller = new AbortController();
 
-		window.addEventListener('mousemove', (e: MouseEvent) => {
-			mouseX = e.clientX;
-			mouseY = e.clientY;
-		}, { signal: controller.signal });
+		window.addEventListener(
+			'mousemove',
+			(e: MouseEvent) => {
+				mouseX = e.clientX;
+				mouseY = e.clientY;
+			},
+			{ signal: controller.signal }
+		);
 
 		const speedInterval = setInterval(() => {
 			mouseSpeedX = mouseX - lastMouseX;
@@ -120,92 +199,6 @@
 			if (rafId) cancelAnimationFrame(rafId);
 		};
 	});
-
-	function n(px: number, total: number): number {
-		return total > 0 ? px / total : 0;
-	}
-
-	function buildPath(): string {
-		const w = cWidth;
-		const h = cHeight;
-		if (!w || !h || !topPoints.length) return 'M0,0 H1 V1 H0 Z';
-
-		const r = BORDER_RADIUS_PX;
-		const rx = n(r, w);
-		const ry = n(r, h);
-
-		let d = `M${rx},0`;
-
-		for (let i = 0; i < topPoints.length; i++) {
-			const p = topPoints[i];
-			const px = n(p.pos, w);
-			const py = n(p.offset, h);
-			if (i < topPoints.length - 1) {
-				const np = topPoints[i + 1];
-				const nx = (px + n(np.pos, w)) / 2;
-				const ny = (py + n(np.offset, h)) / 2;
-				d += ` Q${px},${py} ${nx},${ny}`;
-			} else {
-				d += ` L${1 - rx},0`;
-			}
-		}
-		d += ` Q1,0 1,${ry}`;
-
-		for (let i = 0; i < rightPoints.length; i++) {
-			const p = rightPoints[i];
-			const px = 1 + n(p.offset, w);
-			const py = n(p.pos, h);
-			if (i < rightPoints.length - 1) {
-				const np = rightPoints[i + 1];
-				const nx = (px + (1 + n(np.offset, w))) / 2;
-				const ny = (py + n(np.pos, h)) / 2;
-				d += ` Q${px},${py} ${nx},${ny}`;
-			} else {
-				d += ` L1,${1 - ry}`;
-			}
-		}
-		d += ` Q1,1 ${1 - rx},1`;
-
-		for (let i = 0; i < bottomPoints.length; i++) {
-			const p = bottomPoints[i];
-			const px = 1 - n(p.pos, w);
-			const py = 1 + n(p.offset, h);
-			if (i < bottomPoints.length - 1) {
-				const np = bottomPoints[i + 1];
-				const nx = (px + (1 - n(np.pos, w))) / 2;
-				const ny = (py + (1 + n(np.offset, h))) / 2;
-				d += ` Q${px},${py} ${nx},${ny}`;
-			} else {
-				d += ` L${rx},1`;
-			}
-		}
-		d += ` Q0,1 0,${1 - ry}`;
-
-		for (let i = 0; i < leftPoints.length; i++) {
-			const p = leftPoints[i];
-			const py = 1 - n(p.pos, h);
-			const px = n(-p.offset, w);
-			if (i < leftPoints.length - 1) {
-				const np = leftPoints[i + 1];
-				const ny = (py + (1 - n(np.pos, h))) / 2;
-				const nx = (px + n(-np.offset, w)) / 2;
-				d += ` Q${px},${py} ${nx},${ny}`;
-			} else {
-				d += ` L0,${ry}`;
-			}
-		}
-		d += ` Q0,0 ${rx},0 Z`;
-
-		return d;
-	}
-
-	let path = $derived(buildPath());
 </script>
 
-<svg class="pointer-events-none" aria-hidden="true" style="position: absolute; width: 0; height: 0;">
-	<defs>
-		<clipPath id="elastic-clip" clipPathUnits="objectBoundingBox">
-			<path d={path} />
-		</clipPath>
-	</defs>
-</svg>
+<canvas bind:this={canvasEl} class="pointer-events-none fixed z-20" aria-hidden="true"></canvas>

@@ -124,7 +124,6 @@
 	data-fullscreen={isFullscreen || isMobile}
 	class="from-ash-800 to-ash-700 z-10 flex h-dvh w-dvw flex-col overflow-hidden rounded-none bg-linear-to-tr data-[fullscreen=true]:rounded-none lg:h-[75dvh] lg:w-[70dvw] lg:rounded-xl"
 	class:container-shadow={!isFullscreen || !isMobile}
-	class:elastic-active={!isMobile && !isFullscreen}
 	class:minimized={isMinimized && !isMobile}
 	style:transform="translate({position.x}px, {position.y}px)"
 	style:transition={dragging ? 'none' : 'all 0.2s cubic-bezier(0.4, 0, 0, 1)'}
@@ -132,7 +131,6 @@
 	<Header siteName={data.siteName} favicon={data.defaultFavicon} {isFullscreen} {onMouseDown} {toggleFullscreen} {onMinimize} />
 	{@render children()}
 	<Navbar siteName={data.siteName} socialLinks={data.socialLinks} section={data.section} aiTerminalConfigured={data.aiTerminalConfigured} />
-
 </main>
 
 {#if !isMobile && !isFullscreen}
@@ -163,11 +161,6 @@
 <style>
 	.desktop-bg {
 		background: linear-gradient(135deg, #1a2332 0%, #1e3a5f 30%, #2a4a6b 50%, #1a2332 100%);
-	}
-
-	.elastic-active {
-		clip-path: url(#elastic-clip);
-		border-radius: 0;
 	}
 
 	.minimized {
