@@ -132,10 +132,12 @@
 	<Header siteName={data.siteName} favicon={data.defaultFavicon} {isFullscreen} {onMouseDown} {toggleFullscreen} {onMinimize} />
 	{@render children()}
 	<Navbar siteName={data.siteName} socialLinks={data.socialLinks} section={data.section} aiTerminalConfigured={data.aiTerminalConfigured} />
-	{#if !isMobile && !isFullscreen}
-		<ElasticEdge container={containerElement} />
-	{/if}
+
 </main>
+
+{#if !isMobile && !isFullscreen}
+	<ElasticEdge container={containerElement} />
+{/if}
 
 <div class="desktop-bg absolute top-0 left-0 hidden h-full w-full lg:block" aria-hidden="true"></div>
 

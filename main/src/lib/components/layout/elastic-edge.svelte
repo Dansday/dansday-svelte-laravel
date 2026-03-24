@@ -5,7 +5,7 @@
 	const VISCOSITY = 20;
 	const MOUSE_DIST = 80;
 	const DAMPING = 0.15;
-	const BORDER_RADIUS = 12;
+	const BORDER_RADIUS_PX = 12;
 
 	type EdgePoint = {
 		pos: number;
@@ -26,14 +26,16 @@
 	let lastMouseX = 0;
 	let lastMouseY = 0;
 	let rafId: number | null = null;
-	let containerRect = { x: 0, y: 0, width: 0, height: 0 };
+	let cWidth = 0;
+	let cHeight = 0;
 
 	function createSidePoints(length: number): EdgePoint[] {
 		const pts: EdgePoint[] = [];
-		const r = BORDER_RADIUS;
+		const r = BORDER_RADIUS_PX;
 		for (let i = 0; i <= POINTS_PER_SIDE + 1; i++) {
 			const t = i / (POINTS_PER_SIDE + 1);
-			pts.push({ pos: r + t * (length - 2 * r), iPos: r + t * (length - 2 * r), offset: 0, vOffset: 0 });
+			const p = r + t * (length - 2 * r);
+			pts.push({ pos: p, iPos: p, offset: 0, vOffset: 0 });
 		}
 		return pts;
 	}
@@ -41,7 +43,8 @@
 	function initPoints() {
 		if (!container) return;
 		const rect = container.getBoundingClientRect();
-		containerRect = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+		cWidth = rect.width;
+		cHeight = rect.height;
 		topPoints = createSidePoints(rect.width);
 		rightPoints = createSidePoints(rect.height);
 		bottomPoints = createSidePoints(rect.width);
@@ -49,7 +52,9 @@
 	}
 
 	$effect(() => {
-		if (container) initPoints();
+		if (container) {
+			requestAnimationFrame(() => initPoints());
+		}
 	});
 
 	function moveSidePoints(pts: EdgePoint[], mouseAlongAxis: number, mouseCrossAxis: number, speed: number) {
@@ -57,9 +62,8 @@
 			p.vOffset += (0 - p.offset) / VISCOSITY;
 
 			const dAlong = p.pos - mouseAlongAxis;
-			const dCross = mouseCrossAxis;
 
-			if (Math.abs(dAlong) < MOUSE_DIST && Math.abs(dCross) < MOUSE_DIST) {
+			if (Math.abs(dAlong) < MOUSE_DIST && Math.abs(mouseCrossAxis) < MOUSE_DIST) {
 				const influence = 1 - Math.abs(dAlong) / MOUSE_DIST;
 				p.vOffset += (speed / 6) * influence;
 			}
@@ -74,15 +78,16 @@
 		if (!container) return;
 
 		const rect = container.getBoundingClientRect();
-		containerRect = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+		cWidth = rect.width;
+		cHeight = rect.height;
 
 		const relX = mouseX - rect.x;
 		const relY = mouseY - rect.y;
 
 		moveSidePoints(topPoints, relX, relY, mouseSpeedY);
-		moveSidePoints(bottomPoints, rect.width - relX, rect.height - relY, -mouseSpeedY);
-		moveSidePoints(rightPoints, relY, rect.width - relX, -mouseSpeedX);
-		moveSidePoints(leftPoints, rect.height - relY, relX, mouseSpeedX);
+		moveSidePoints(bottomPoints, cWidth - relX, cHeight - relY, -mouseSpeedY);
+		moveSidePoints(rightPoints, relY, cWidth - relX, -mouseSpeedX);
+		moveSidePoints(leftPoints, cHeight - relY, relX, mouseSpeedX);
 
 		topPoints = [...topPoints];
 		rightPoints = [...rightPoints];
@@ -95,12 +100,10 @@
 
 		const controller = new AbortController();
 
-		const handleMouseMove = (e: MouseEvent) => {
+		window.addEventListener('mousemove', (e: MouseEvent) => {
 			mouseX = e.clientX;
 			mouseY = e.clientY;
-		};
-
-		window.addEventListener('mousemove', handleMouseMove, { signal: controller.signal });
+		}, { signal: controller.signal });
 
 		const speedInterval = setInterval(() => {
 			mouseSpeedX = mouseX - lastMouseX;
@@ -118,71 +121,80 @@
 		};
 	});
 
-	function buildPath(): string {
-		const w = containerRect.width;
-		const h = containerRect.height;
-		if (!w || !h || !topPoints.length) return '';
+	function n(px: number, total: number): number {
+		return total > 0 ? px / total : 0;
+	}
 
-		const r = BORDER_RADIUS;
-		let d = `M${r},0`;
+	function buildPath(): string {
+		const w = cWidth;
+		const h = cHeight;
+		if (!w || !h || !topPoints.length) return 'M0,0 H1 V1 H0 Z';
+
+		const r = BORDER_RADIUS_PX;
+		const rx = n(r, w);
+		const ry = n(r, h);
+
+		let d = `M${rx},0`;
 
 		for (let i = 0; i < topPoints.length; i++) {
 			const p = topPoints[i];
-			const py = p.offset;
+			const px = n(p.pos, w);
+			const py = n(p.offset, h);
 			if (i < topPoints.length - 1) {
-				const n = topPoints[i + 1];
-				const nx = (p.pos + n.pos) / 2;
-				const ny = (py + n.offset) / 2;
-				d += ` Q${p.pos},${py} ${nx},${ny}`;
+				const np = topPoints[i + 1];
+				const nx = (px + n(np.pos, w)) / 2;
+				const ny = (py + n(np.offset, h)) / 2;
+				d += ` Q${px},${py} ${nx},${ny}`;
 			} else {
-				d += ` L${w - r},0`;
+				d += ` L${1 - rx},0`;
 			}
 		}
-		d += ` Q${w},0 ${w},${r}`;
+		d += ` Q1,0 1,${ry}`;
 
 		for (let i = 0; i < rightPoints.length; i++) {
 			const p = rightPoints[i];
-			const px = w + p.offset;
+			const px = 1 + n(p.offset, w);
+			const py = n(p.pos, h);
 			if (i < rightPoints.length - 1) {
-				const n = rightPoints[i + 1];
-				const ny = (p.pos + n.pos) / 2;
-				const nx = (px + (w + n.offset)) / 2;
-				d += ` Q${px},${p.pos} ${nx},${ny}`;
+				const np = rightPoints[i + 1];
+				const nx = (px + (1 + n(np.offset, w))) / 2;
+				const ny = (py + n(np.pos, h)) / 2;
+				d += ` Q${px},${py} ${nx},${ny}`;
 			} else {
-				d += ` L${w},${h - r}`;
+				d += ` L1,${1 - ry}`;
 			}
 		}
-		d += ` Q${w},${h} ${w - r},${h}`;
+		d += ` Q1,1 ${1 - rx},1`;
 
 		for (let i = 0; i < bottomPoints.length; i++) {
 			const p = bottomPoints[i];
-			const px = w - p.pos;
-			const py = h + p.offset;
+			const px = 1 - n(p.pos, w);
+			const py = 1 + n(p.offset, h);
 			if (i < bottomPoints.length - 1) {
-				const n = bottomPoints[i + 1];
-				const nx = (px + (w - n.pos)) / 2;
-				const ny = (py + (h + n.offset)) / 2;
+				const np = bottomPoints[i + 1];
+				const nx = (px + (1 - n(np.pos, w))) / 2;
+				const ny = (py + (1 + n(np.offset, h))) / 2;
 				d += ` Q${px},${py} ${nx},${ny}`;
 			} else {
-				d += ` L${r},${h}`;
+				d += ` L${rx},1`;
 			}
 		}
-		d += ` Q0,${h} 0,${h - r}`;
+		d += ` Q0,1 0,${1 - ry}`;
 
 		for (let i = 0; i < leftPoints.length; i++) {
 			const p = leftPoints[i];
-			const py = h - p.pos;
-			const px = -p.offset;
+			const py = 1 - n(p.pos, h);
+			const px = n(-p.offset, w);
 			if (i < leftPoints.length - 1) {
-				const n = leftPoints[i + 1];
-				const ny = (py + (h - n.pos)) / 2;
-				const nx = (px + -n.offset) / 2;
+				const np = leftPoints[i + 1];
+				const ny = (py + (1 - n(np.pos, h))) / 2;
+				const nx = (px + n(-np.offset, w)) / 2;
 				d += ` Q${px},${py} ${nx},${ny}`;
 			} else {
-				d += ` L0,${r}`;
+				d += ` L0,${ry}`;
 			}
 		}
-		d += ` Q0,0 ${r},0 Z`;
+		d += ` Q0,0 ${rx},0 Z`;
 
 		return d;
 	}
@@ -190,9 +202,9 @@
 	let path = $derived(buildPath());
 </script>
 
-<svg class="pointer-events-none absolute top-0 left-0 h-0 w-0" aria-hidden="true" style="position: absolute; width: 0; height: 0;">
+<svg class="pointer-events-none" aria-hidden="true" style="position: absolute; width: 0; height: 0;">
 	<defs>
-		<clipPath id="elastic-clip" clipPathUnits="userSpaceOnUse">
+		<clipPath id="elastic-clip" clipPathUnits="objectBoundingBox">
 			<path d={path} />
 		</clipPath>
 	</defs>
