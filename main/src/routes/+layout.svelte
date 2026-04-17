@@ -4,6 +4,7 @@
 	import '../app.css';
 	import Header from '$lib/components/layout/header/header.svelte';
 	import Navbar from '$lib/components/layout/navbar/navbar.svelte';
+	import ElasticEdge from '$lib/components/layout/elastic-edge.svelte';
 	import GoogleAnalytics from '$lib/components/GoogleAnalytics.svelte';
 
 	import type { LayoutProps } from './$types';
@@ -128,6 +129,10 @@
 		adminBaseUrl={data.adminBaseUrl}
 	/>
 </main>
+
+{#if !isMobile && !isFullscreen}
+	<ElasticEdge container={containerElement} />
+{/if}
 
 <div class="desktop-bg absolute top-0 left-0 hidden h-full w-full lg:block" aria-hidden="true"></div>
 
